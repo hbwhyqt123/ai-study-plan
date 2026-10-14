@@ -187,7 +187,7 @@ function renderSelectedCourses(){populateStartDayOptions();sortSelectedCourses()
 function syncSelectedContent(){const el=document.getElementById('detailed_learning_content');if(!el)return;sortSelectedCourses();el.value=selectedCourses.map(c=>`${c.task} | ${c.goal||'看课'} | ${c.type||'课程'} | pace=${Number(c.pace||0)} | start=${Math.max(1,Number(c.startDay||1))} | group=${c.paceGroup||''}`).join('\n');lastAiResult=null}
 function setSelectedFromLines(text){selectedCourses=parseContent(text).map(x=>({task:x.task,goal:x.goal||'看课',type:x.type||'课程',pace:x.pace||0,startDay:x.startDay||1,paceGroup:x.paceGroup||('S'+Date.now()+'_'+Math.random().toString(36).slice(2,7))}));undoStack=[];updateUndoBtn();renderSelectedCourses()}
 function clearSelectedCourses(){selectedCourses=[];undoStack=[];updateUndoBtn();renderSelectedCourses();showStatus('详细学习内容已清空。')}
-function getAiConfig(){return{url:'https://ai.guoshitianxia.cn/v1/chat/completions',model:'kimi-k2.8',apiKey:'sk-MCHNPE6eZ1MhJieEhG2IDP29zivf1hHDYUPYa3t9dO7uE0wS',temperature:1,authMode:'bearer'}}
+function getAiConfig(){return{url:'https://ai.guoshitianxia.cn/v1/chat/completions',model:'doubao-seed-2.0-lite',apiKey:'sk-MCHNPE6eZ1MhJieEhG2IDP29zivf1hHDYUPYa3t9dO7uE0wS',temperature:1,authMode:'bearer'}}
 function authHeaders(ai){const h={'Content-Type':'application/json'};if(ai.apiKey){if(ai.authMode==='x-api-key')h['X-API-Key']=ai.apiKey;else if(ai.authMode==='token')h['Token']=ai.apiKey;else h['Authorization']='Bearer '+ai.apiKey}return h}
 function buildAiPrompt(cfg,lessons,knownGoals){
   const knownMap=(knownGoals instanceof Map)?knownGoals:(new Map());
