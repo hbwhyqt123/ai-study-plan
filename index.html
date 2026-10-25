@@ -190,7 +190,30 @@ function renderSelectedCourses(){populateStartDayOptions();sortSelectedCourses()
 function syncSelectedContent(){const el=document.getElementById('detailed_learning_content');if(!el)return;sortSelectedCourses();el.value=selectedCourses.map(c=>`${c.task} | ${c.goal||'看课'} | ${c.type||'课程'} | pace=${Number(c.pace||0)} | start=${Math.max(1,Number(c.startDay||1))} | group=${c.paceGroup||''}`).join('\n');lastAiResult=null}
 function setSelectedFromLines(text){selectedCourses=parseContent(text).map(x=>({task:x.task,goal:x.goal||'看课',type:x.type||'课程',pace:x.pace||0,startDay:x.startDay||1,paceGroup:x.paceGroup||('S'+Date.now()+'_'+Math.random().toString(36).slice(2,7))}));undoStack=[];updateUndoBtn();renderSelectedCourses()}
 function clearSelectedCourses(){selectedCourses=[];undoStack=[];updateUndoBtn();renderSelectedCourses();showStatus('详细学习内容已清空。')}
-function getAiConfig(){return{url:'https://ai.guoshitianxia.cn/v1/chat/completions',model:'doubao-seed-2.0-lite',apiKey:'sk-MCHNPE6eZ1MhJieEhG2IDP29zivf1hHDYUPYa3t9dO7uE0wS',temperature:1,authMode:'bearer'}}
+function getAiConfig(){return{url:'https://ai.guoshitianxia.cn/v1/chat/completions',model:'doubao-seed-2.1-lite',fallbackModels:['doubao-seed-2.0-pro','deepseek-v4.1-flash'],apiKey:'sk-MCHNPE6eZ1MhJieEhG2IDP29zivf1hHDYUPYa3t9dO7uE0wS',temperature:1,authMode:'bearer'}}
+async function aiFetch(ai,payload){
+  const models=[ai.model].concat(ai.fallbackModels||[]);
+  let lastErr=null;
+  for(const m of models){
+    try{
+      const body=Object.assign({},payload,{model:m});
+      const res=await fetch(ai.url,{method:'POST',headers:authHeaders(ai),body:JSON.stringify(body)});
+      const text=await res.text();
+      if(/^\s*</.test(text)){lastErr=new Error('网关返回了网页HTML，不是AI接口JSON；通常是接口地址写到了管理页面，请使用 /v1/chat/completions。');continue;}
+      if(res.ok)return{res,text,modelUsed:m};
+      let data;try{data=JSON.parse(text)}catch(e){data=text}
+      const msg=extractTextFromGatewayResponse(data);
+      lastErr=new Error('网关返回错误：'+res.status+' '+msg.slice(0,300));
+      if(/model not found|no available channel|无可用渠道|无可用渠道|无可用/i.test(msg))continue;
+      throw lastErr;
+    }catch(e){
+      lastErr=e;
+      if(/model not found|no available channel|无可用渠道|无可用/i.test(e.message))continue;
+      throw e;
+    }
+  }
+  throw new Error((lastErr?lastErr.message:'所有备用模型均不可用')+'（已尝试：'+models.join('、')+'）');
+}
 function authHeaders(ai){const h={'Content-Type':'application/json'};if(ai.apiKey){if(ai.authMode==='x-api-key')h['X-API-Key']=ai.apiKey;else if(ai.authMode==='token')h['Token']=ai.apiKey;else h['Authorization']='Bearer '+ai.apiKey}return h}
 function buildAiPrompt(cfg,lessons,knownGoals){
   const knownMap=(knownGoals instanceof Map)?knownGoals:(new Map());
@@ -257,12 +280,10 @@ async function callAiGateway(){
   const knownGoals=new Map();
   lessons.forEach(l=>{const g=lookupGoalLib(l.task);if(g&&g.goal)knownGoals.set(l.task,g.goal);});
   const ai=getAiConfig();
-  const body={model:ai.model,messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:buildAiPrompt(cfg,lessons,knownGoals)}],temperature:ai.temperature};
-  const res=await fetch(ai.url,{method:'POST',headers:authHeaders(ai),body:JSON.stringify(body)});
-  const text=await res.text();
+  const payload={messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:buildAiPrompt(cfg,lessons,knownGoals)}],temperature:ai.temperature};
+  const {res,text}=await aiFetch(ai,payload);
   if(/^\s*</.test(text))throw new Error('网关返回了网页HTML，不是AI接口JSON；通常是接口地址写到了管理页面，请使用 /v1/chat/completions。');
   let data;try{data=JSON.parse(text)}catch(e){data=text}
-  if(!res.ok)throw new Error('网关返回错误：'+res.status+' '+extractTextFromGatewayResponse(data).slice(0,300));
   const content=extractTextFromGatewayResponse(data);
   if(/^\s*</.test(content))throw new Error('AI回复内容是HTML页面，不是学习计划JSON，请检查网关接口路径。');
   const parsed=parseAiJson(content);
@@ -276,9 +297,8 @@ async function callAiGateway(){
   if(reviewTasks.length>0){
     try{
       const reviewPrompt=buildReviewPrompt(cfg,reviewTasks);
-      const reviewBody={model:ai.model,messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:reviewPrompt}],temperature:ai.temperature};
-      const reviewRes=await fetch(ai.url,{method:'POST',headers:authHeaders(ai),body:JSON.stringify(reviewBody)});
-      const reviewText=await reviewRes.text();
+      const reviewPayload={messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:reviewPrompt}],temperature:ai.temperature};
+      const {res:reviewRes,text:reviewText}=await aiFetch(ai,reviewPayload);
       let reviewData;try{reviewData=JSON.parse(reviewText)}catch(e){reviewData=reviewText}
       if(reviewRes.ok){
         const reviewContent=extractTextFromGatewayResponse(reviewData);
@@ -315,11 +335,9 @@ async function rewriteSelectedGoalsWithAI(){
   const prompt=buildAiPrompt(cfg,lessons,knownGoals);
   showStatus('正在调用公司 AI 网关为 '+lessons.length+' 个课节逐条撰写目标，请稍候...');
   try{
-    const body={model:ai.model,messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:prompt}],temperature:ai.temperature};
-    const res=await fetch(ai.url,{method:'POST',headers:authHeaders(ai),body:JSON.stringify(body)});
-    const text=await res.text();
+    const payload={messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:prompt}],temperature:ai.temperature};
+    const {res,text}=await aiFetch(ai,payload);
     let data;try{data=JSON.parse(text)}catch(e){data=text}
-    if(!res.ok)throw new Error('网关返回错误：'+res.status+' '+extractTextFromGatewayResponse(data).slice(0,300));
     const content=extractTextFromGatewayResponse(data);
     const parsed=parseAiJson(content);
     const goalMap=new Map();
@@ -331,9 +349,8 @@ async function rewriteSelectedGoalsWithAI(){
     if(reviewTasks.length>0){
       try{
         const reviewPrompt=buildReviewPrompt(cfg,reviewTasks);
-        const reviewBody={model:ai.model,messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:reviewPrompt}],temperature:ai.temperature};
-        const reviewRes=await fetch(ai.url,{method:'POST',headers:authHeaders(ai),body:JSON.stringify(reviewBody)});
-        const reviewText=await reviewRes.text();
+        const reviewPayload={messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:reviewPrompt}],temperature:ai.temperature};
+        const {res:reviewRes,text:reviewText}=await aiFetch(ai,reviewPayload);
         let reviewData;try{reviewData=JSON.parse(reviewText)}catch(e){reviewData=reviewText}
         if(reviewRes.ok){
           const reviewContent=extractTextFromGatewayResponse(reviewData);
