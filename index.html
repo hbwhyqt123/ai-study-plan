@@ -12,6 +12,22 @@
   .course-picker{border:1px solid var(--border);background:#f8fbff;border-radius:14px;padding:14px;margin-top:6px}.picker-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.picker-row.three{grid-template-columns:1fr 1fr 1fr}.picker-field label{font-size:12px;margin-bottom:5px;color:#315f91}.picker-field input{margin-bottom:6px;background:#fff}.course-preview{background:#fff;border:1px dashed #9fc3e6;border-radius:12px;padding:10px 12px;line-height:1.7;color:#244062;font-size:13px;margin:8px 0}.course-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}.mini-select{width:auto;min-width:94px;padding:8px 9px;border-radius:9px}.course-list{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:#fff;max-height:360px;overflow-y:auto;overflow-x:auto}.course-list table{width:max-content;min-width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}.course-list thead th{position:sticky;top:0;z-index:2}.course-list th{background:#eaf4fe;color:#244062;text-align:left;padding:8px;border-bottom:1px solid var(--border);position:relative;user-select:none}.course-list td{padding:7px;border-bottom:1px solid #e5edf5;vertical-align:middle}.col-resizer{position:absolute;right:-4px;top:0;width:8px;height:100%;cursor:col-resize;z-index:6;touch-action:none}.col-resizer:hover,.col-resizer.active{background:rgba(47,85,151,.22)}body.col-resizing{cursor:col-resize;user-select:none}.resizable-table col{min-width:44px}.course-list tr:last-child td{border-bottom:0}.course-list .task-name{font-weight:700;color:#1f2937;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}.course-list .empty-row{color:#667085;text-align:center;padding:14px}.course-list button{padding:6px 8px;border-radius:8px;font-size:12px}.order-btns{display:flex;gap:4px;flex-wrap:nowrap}.order-btns button{min-width:32px;padding:6px}.pill-note{display:inline-block;background:#edf7ed;color:#14532d;border:1px solid #bbdfc1;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}.hidden-source{display:none}
 
   .ai-box{margin:0 0 18px;padding:14px;border:1px solid #b7d6f3;background:#f4f9ff;border-radius:15px}.ai-box h3{margin:0 0 10px;color:#244062;font-size:16px}.warn{background:#fff7e0;border:1px solid #ffd966;color:#7a3b00;border-radius:11px;padding:9px 10px;font-size:12px;line-height:1.6;margin-top:10px}.ai-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.ai-mini{font-size:12px;color:#667085;line-height:1.6;margin-top:6px}.password-row{position:relative}.password-row input{padding-right:72px}.toggle-key{position:absolute;right:6px;top:31px;padding:6px 8px;border-radius:8px;background:#eef4fb;color:#2f5597;border:1px solid #c7d7e6;font-size:12px}.lesson-check-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px}.lesson-check-list{max-height:220px;overflow-y:auto;border:1px solid var(--border);background:#fff;border-radius:11px;padding:6px}.lesson-check-item{display:flex;gap:8px;align-items:flex-start;padding:7px 8px;border-radius:9px;line-height:1.45;font-size:13px;color:#244062;cursor:pointer}.lesson-check-item:hover{background:#f4f9ff}.lesson-check-item input{width:auto;margin:2px 0 0;flex:0 0 auto}.lesson-check-item span{word-break:break-word}.lesson-check-item.checked{background:#eaf4fe;font-weight:700}.weekday-picker{display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:8px}.weekday-option{margin:0;display:flex;align-items:center;justify-content:center;cursor:pointer}.weekday-option input{position:absolute;opacity:0;pointer-events:none}.weekday-option span{width:100%;text-align:center;padding:10px 8px;border:1px solid var(--border);border-radius:10px;background:#fff;color:#315f91;font-size:13px;transition:.15s}.weekday-option:hover span{background:#f4f9ff}.weekday-option input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:800;box-shadow:0 4px 10px rgba(47,85,151,.18)}.weekday-tools{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:8px}.weekday-tools .hint{margin:0 0 0 3px}@media(max-width:760px){.weekday-picker{grid-template-columns:repeat(4,minmax(68px,1fr))}}input::placeholder,textarea::placeholder{color:#98a2b3;opacity:1}input:focus::placeholder,textarea:focus::placeholder{color:transparent}
+  .modal-mask{position:fixed;inset:0;background:rgba(31,41,55,.45);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+  .modal-mask.show{display:flex}
+  .modal{background:#fff;border-radius:18px;max-width:700px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+  .modal-head h3{margin:0;color:#244062;font-size:19px}
+  .modal-close{border:0;background:#eef4fb;color:#2f5597;border-radius:10px;padding:8px 12px;font-weight:800;cursor:pointer}
+  .modal-body{padding:18px 22px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  .tpl-item{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .tpl-item .meta{font-size:12px;color:var(--muted);margin-top:5px}
+  .tpl-item .ops{display:flex;gap:6px;flex-wrap:wrap}
+  .tpl-tag{display:inline-block;background:#eaf4fe;color:#2f5597;border:1px solid #b7d6f3;border-radius:999px;padding:2px 9px;font-size:12px;margin-right:6px}
+  .tpl-form-row{margin-bottom:12px}
+  .tpl-form-row label{display:block;font-size:13px;font-weight:700;color:#244062;margin-bottom:6px}
+  .gov-note{background:#fff7e0;border:1px solid #ffd966;color:#7a3b00;border-radius:11px;padding:9px 11px;font-size:12px;line-height:1.6;margin-bottom:14px}
+  .empty-hint{color:#667085;text-align:center;padding:18px}
 </style>
 </head>
 <body>
@@ -91,6 +107,8 @@
         <button class="green" onclick="downloadExcel()">直接下载 Excel</button>
         <button class="secondary" onclick="downloadConfig()">备份配置</button>
         <button class="orange" onclick="loadDemoAndPreview()">载入示例并预览</button>
+        <button class="green" onclick="saveCurrentAsTemplate()">存为我的模板</button>
+        <button class="secondary" onclick="openTemplateManager()">我的模板库</button>
       </div>
       <div id="status" class="status"></div>
       <div class="footer">说明：AI网关配置已内置隐藏；点击“AI智能生成预览”会调用公司AI网关。本地规则生成不会上传学员信息。下载的文件可用 Microsoft Excel / WPS 打开。</div>
@@ -423,10 +441,57 @@ function loadTemplate(k){
 }
 function clearForm(){clearSelectedCourses()}
 function loadDemoAndPreview(){loadTemplate('weakData');generatePreview()}
+const LS_TPL_KEY='studyPlanTemplatesV1';
+function getTemplates(){try{return JSON.parse(localStorage.getItem(LS_TPL_KEY)||'[]')}catch(e){return[]}}
+function setTemplates(arr){try{localStorage.setItem(LS_TPL_KEY,JSON.stringify(arr))}catch(e){showStatus('本地存储不可用，无法保存模板。')}}
+function extractStudentName(title){if(!title)return'';const m=String(title).match(/^(.+?)(?=公考|学习计划|定制|的学习|的|$)/);const n=m?m[1].trim():'';return(n&&n.length<=8&&/[\u4e00-\u9fa5]/.test(n))?n:''}
+function getTemplateExamTypes(){return['国考','省考','事业编','三支一扶','军队文职','教师编','其他']}
+function saveCurrentAsTemplate(){
+  const cfg=getConfig();
+  if(!selectedCourses.length){showStatus('当前还没有学习内容，无法存为模板。请先添加课程或补充内容。');return}
+  const title0=cfg.title||'';const name0=extractStudentName(title0)||'';
+  const body=document.getElementById('tplModalBody');const foot=document.getElementById('tplModalFoot');
+  document.getElementById('tplModalTitle').textContent='存为我的模板';
+  const exams=getTemplateExamTypes().map(e=>`<option ${e==='其他'?'selected':''}>${e}</option>`).join('');
+  body.innerHTML=`<div class="gov-note">此模板将保存在本机浏览器（仅你自己可见）。共享模板库（班主任投稿 + 张钰审核发布）为后续规划，先跑通个人模板。</div><div class="tpl-form-row"><label>模板名称 *</label><input id="tpl_name" placeholder="例如：零基础资料分析强化模板" value="${esc(name0?name0+'的模板':'')}"></div><div class="tpl-form-row"><label>适用考试类型</label><select id="tpl_exam">${exams}</select></div><div class="tpl-form-row"><label>适用科目 / 人群备注</label><input id="tpl_note" placeholder="例如：资料分析薄弱、在职备考、每天5小时"></div><div class="tpl-form-row"><label>表格标题（保存时快照）</label><input id="tpl_title_snap" value="${esc(title0)}"></div>`;
+  foot.innerHTML=`<button class="secondary" onclick="closeTplModal()">取消</button><button class="orange" onclick="confirmSaveTemplate()">保存模板</button>`;
+  openTplModal();const n=document.getElementById('tpl_name');if(n)n.focus();
+}
+function confirmSaveTemplate(){
+  const name=val('tpl_name').trim();if(!name){showStatus('请填写模板名称。');return}
+  const cfg=getConfig();const courses=selectedCourses.map(c=>({...c}));
+  const tpl={id:'T'+Date.now()+'_'+Math.random().toString(36).slice(2,7),name,examType:val('tpl_exam'),note:val('tpl_note').trim(),title:val('tpl_title_snap'),studentName:extractStudentName(val('tpl_title_snap')),createdAt:isoDate(new Date()),config:{daily_study_time:cfg.daily_study_time,plan_days:cfg.plan_days,practice_review_interval:cfg.practice_review_interval,highlight_practice:cfg.highlight_practice,tasks_per_study_day:cfg.tasks_per_study_day,study_weekdays:getSelectedStudyWeekdays(),student_profile:cfg.student_profile},courses};
+  const arr=getTemplates();arr.push(tpl);setTemplates(arr);closeTplModal();
+  showStatus('已保存模板「'+name+'」到本机，可在“我的模板库”导入。');
+}
+function openTemplateManager(){
+  const arr=getTemplates();const body=document.getElementById('tplModalBody');const foot=document.getElementById('tplModalFoot');
+  document.getElementById('tplModalTitle').textContent='我的模板库';
+  let html=`<div class="gov-note">当前为『我的模板』（本地保存，仅本机可见）。共享模板库（班主任投稿 + 张钰审核发布）为后续规划，开放后可直接投稿。</div>`;
+  if(!arr.length){html+=`<div class="empty-hint">还没有保存任何模板。生成一份计划后，点“存为我的模板”即可收藏。</div>`}
+  else{arr.slice().reverse().forEach(t=>{const tags=`<span class="tpl-tag">${esc(t.examType||'其他')}</span>`+(t.note?`<span class="tpl-tag">${esc(t.note)}</span>`:'');html+=`<div class="tpl-item"><div><div style="font-weight:800;color:#244062">${esc(t.name)}</div><div class="meta">${tags} 课程 ${t.courses.length} 节 ｜ 创建 ${esc(t.createdAt)}</div></div><div class="ops"><button class="orange" onclick="importTemplate('${t.id}')">导入</button><button class="secondary" onclick="renameTemplate('${t.id}')">重命名</button><button class="secondary" onclick="deleteTemplate('${t.id}')">删除</button></div></div>`;});}
+  body.innerHTML=html;foot.innerHTML=`<button class="secondary" onclick="closeTplModal()">关闭</button>`;openTplModal();
+}
+function findTemplate(id){return getTemplates().find(t=>t.id===id)}
+function deleteTemplate(id){const t=findTemplate(id);if(!t)return;if(!window.confirm('确定删除模板「'+t.name+'」？此操作不可恢复。'))return;setTemplates(getTemplates().filter(x=>x.id!==id));openTemplateManager();showStatus('已删除模板「'+t.name+'」。')}
+function renameTemplate(id){const t=findTemplate(id);if(!t)return;const n=window.prompt('修改模板名称：',t.name);if(n==null)return;const nn=n.trim();if(!nn)return;const arr=getTemplates();const x=arr.find(y=>y.id===id);if(x){x.name=nn;setTemplates(arr);openTemplateManager();showStatus('已重命名为「'+nn+'」。')}}
+function importTemplate(id){const t=findTemplate(id);if(!t)return;const body=document.getElementById('tplModalBody');const foot=document.getElementById('tplModalFoot');document.getElementById('tplModalTitle').textContent='导入模板：'+t.name;const oldName=t.studentName||'';const title0=t.title||'';const today=isoDate(new Date());body.innerHTML=`<div class="gov-note">导入后自动按新开始日期重算时间节点，并按新学员姓名更新标题。下方可修改关键信息。</div><div class="tpl-form-row"><label>新学员姓名（原姓名：${esc(oldName||'无')}）</label><input id="imp_name" value="${esc(oldName)}" placeholder="例如：李同学"></div><div class="tpl-form-row"><label>开始学习时间</label><input id="imp_start" type="date" value="${today}"></div><div class="tpl-form-row"><label>表格标题</label><input id="imp_title" value="${esc(title0)}"></div><div class="tpl-form-row"><label>计划学习日数</label><input id="imp_days" type="number" min="1" max="120" value="${Number(t.config.plan_days||20)}"></div><div class="tpl-form-row"><label>学习频次（原：${esc((t.config.study_weekdays||[]).map(d=>WEEKDAYS[d]).join('、')||'未记录')}）</label><div class="weekday-picker" id="imp_weekdays">${WEEKDAYS.map((w,d)=>`<label class="weekday-option"><input type="checkbox" class="imp-weekday" value="${d}" ${(t.config.study_weekdays||[]).includes(d)?'checked':''}><span>${w}</span></label>`).join('')}</div><div class="weekday-tools"><button type="button" class="template" onclick="setImpWeekdays([1,2,3,4,5,6,0])">每天</button><button type="button" class="template" onclick="setImpWeekdays([1,2,3,4,5])">周一至周五</button><button type="button" class="template" onclick="setImpWeekdays([])">清空</button></div></div>`;foot.innerHTML=`<button class="secondary" onclick="openTemplateManager()">返回</button><button class="green" onclick="confirmImport('${t.id}')">应用并生成预览</button>`;openTplModal();const nm=document.getElementById('imp_name');if(nm)nm.focus();}
+function setImpWeekdays(days){const s=new Set(days.map(Number));document.querySelectorAll('#imp_weekdays .imp-weekday').forEach(x=>x.checked=s.has(Number(x.value)))}
+function getImpWeekdays(){return Array.from(document.querySelectorAll('#imp_weekdays .imp-weekday:checked')).map(x=>Number(x.value))}
+function confirmImport(id){const t=findTemplate(id);if(!t)return;const newName=val('imp_name').trim();const oldName=t.studentName||'';let title=val('imp_title').trim();if(oldName&&newName&&title.indexOf(oldName)>=0)title=title.replace(oldName,newName);const setV=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v};setV('title',title);setV('start_date',val('imp_start'));setV('plan_days',Math.max(1,Number(val('imp_days')||20)));setV('student_profile',t.config.student_profile||val('student_profile'));setV('daily_study_time',t.config.daily_study_time||val('daily_study_time'));setV('practice_review_interval',t.config.practice_review_interval||'');setV('tasks_per_day',t.config.tasks_per_study_day||0);const hp=document.getElementById('highlight_practice');if(hp)hp.checked=!!t.config.highlight_practice;setStudyWeekdays(getImpWeekdays());selectedCourses=t.courses.map(c=>({...c}));undoStack=[];updateUndoBtn();renderSelectedCourses();syncSelectedContent();populateStartDayOptions();populateSuppStartDayOptions();closeTplModal();generatePreview();showStatus('已导入模板「'+t.name+'」，并按新信息自动重算时间节点与学员姓名，预览已更新。');}
+function openTplModal(){const m=document.getElementById('tplModal');if(m)m.classList.add('show')}
+function closeTplModal(){const m=document.getElementById('tplModal');if(m)m.classList.remove('show')}
 populateCoursePicker();
 selectedCourses=[];
 renderSelectedCourses();
 
 </script>
+<div id="tplModal" class="modal-mask" onclick="if(event.target===this)closeTplModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="tplModalTitle">模板库</h3><button class="modal-close" type="button" onclick="closeTplModal()">关闭</button></div>
+    <div class="modal-body" id="tplModalBody"></div>
+    <div class="modal-foot" id="tplModalFoot"></div>
+  </div>
+</div>
 </body>
 </html>
