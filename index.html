@@ -28,6 +28,9 @@
   .tpl-form-row label{display:block;font-size:13px;font-weight:700;color:#244062;margin-bottom:6px}
   .gov-note{background:#fff7e0;border:1px solid #ffd966;color:#7a3b00;border-radius:11px;padding:9px 11px;font-size:12px;line-height:1.6;margin-bottom:14px}
   .empty-hint{color:#667085;text-align:center;padding:18px}
+  .ai-gen-card .ai-desc{width:100%;min-height:130px;box-sizing:border-box;padding:10px 12px;font-size:14px;line-height:1.7;border:1px solid var(--border,#d9d9d9);border-radius:8px;resize:vertical;font-family:inherit;margin-top:8px}
+  .ai-gen-hint{font-size:13px;color:var(--muted,#888);line-height:1.8;background:#f7f9fc;border:1px dashed #c9d6ea;padding:10px 12px;border-radius:8px;margin-bottom:4px}
+  .ai-gen-actions{margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -37,6 +40,16 @@
     <p>填写学员情况和学习内容后，点击 AI 智能生成预览，即可调用公司 AI 网关分析，再预览并下载 Excel 表格。</p>
   </div>
   <div class="layout">
+    <section class="card ai-gen-card">
+      <h2>AI 快速制定（粘贴描述即可）</h2>
+      <div class="ai-gen-hint">把一段学习计划描述粘贴到下面，点击「AI 解析并生成」，系统会按制定逻辑自动排课：自动确定学习天数、每周学习日、科目顺序、每日课包（0基础/168绝技/课后作业）与补充任务，并按开始日期自动更新所有时间节点。生成后仍可在下方手动微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。<br>示例：「制定一个45天的学习计划，每周学习五天，周一到周五学习，每天学习3个小时，按照顺序先学习资料分析、言语理解、判断推理，每天任务是一节0基础、一节168绝技、一节168绝技课后练习。每天20分钟时政背诵。」</div>
+      <textarea id="ai_desc_input" class="ai-desc" placeholder="在此粘贴学习计划描述，例如上面的示例..."></textarea>
+      <div class="ai-gen-actions">
+        <button class="orange" onclick="parseAndGenerateFromDesc()">AI 解析并生成学习计划</button>
+        <button class="secondary" onclick="document.getElementById('ai_desc_input').value=''">清空描述</button>
+        <span class="hint">生成后可在下面「详细学习内容」区手动增删或改上课日。</span>
+      </div>
+    </section>
     <section class="card">
       <h2>一、填写学员信息</h2>
 
@@ -438,6 +451,96 @@ function loadTemplate(k){
   };
   setSelectedFromLines(map[k]||'');
   showStatus('模板已载入，可继续用三级选课补充或删除课程。');
+}
+function normalizeSubjectAlias(s){if(!s)return'';const t=String(s).replace(/\s+/g,'');if(/资料/.test(t))return'资料分析';if(/言语/.test(t))return'言语理解';if(/判断/.test(t))return'判断推理';if(/数量|数资/.test(t))return'数量关系';if(/常识/.test(t))return'常识判断';if(/政治/.test(t))return'政治理论';if(/申论/.test(t))return'申论';return''}
+function normalizePackageAlias(s){if(!s)return'';const t=String(s).replace(/\s+/g,'').toLowerCase();if(/课后/.test(t))return'168绝技课后作业';if(/绝技/.test(t))return'168绝技';if(/零基础|0基础|基础/.test(t))return'0基础';return''}
+function normalizeWeekdays(arr){const map={'周日':0,'周一':1,'周二':2,'周三':3,'周四':4,'周五':5,'周六':6};const out=[];(arr||[]).forEach(x=>{if(typeof x==='number'&&x>=0&&x<=6)out.push(x);else{const s=String(x).trim();if(map.hasOwnProperty(s))out.push(map[s]);else{const m=s.match(/\d/);if(m)out.push(Number(m[0]))}}});return[...new Set(out)]}
+function buildParsePrompt(desc){
+  return `你是一个公考学习计划解析器。用户会贴一段【自然语言学习计划描述】，请把它解析成严格 JSON（不要 Markdown、不要解释、不要代码块）。
+
+输出格式：
+{"title":"表格标题，若描述含学员姓名则写『姓名+公考定制学习计划表』，否则空字符串","plan_days":数字(只算学习日，不含休息日),"weekdays":[数字数组],"start_date":"YYYY-MM-DD 或空字符串","daily_study_time":"字符串如 '3小时'","subjects_order":["科目数组"],"daily_packages":["课包数组"],"subject_mode":"sequence","supplements":[{"content":"补充内容名(如 时政积累/时政背诵)","minutes":数字,"per_day":1,"type":"背诵"}],"student_profile":"学员基础/备考目标，未提则空字符串","review_freq":"习题复习频次(每1天..每7天/不自动插入)，未提则空字符串"}
+
+科目必须从这些标准名归一化：资料分析、言语理解、判断推理、数量关系、常识判断、政治理论、申论（资料→资料分析；言语→言语理解；判断→判断推理；数量/数资→数量关系；常识→常识判断；政治→政治理论）。
+课包必须从这些归一化：0基础、168绝技、168绝技课后作业（零基础/0基础→0基础；168绝技/绝技→168绝技；课后练习/课后作业/课后习题→168绝技课后作业）。
+星期：周一=1,周二=2,周三=3,周四=4,周五=5,周六=6,周日=0；周一到周五/工作日/每周5天→[1,2,3,4,5]；每天/全周→[0,1,2,3,4,5,6]；周末→[6,0]；否则按提到的星期拼接。
+subjects_order 缺省 ["资料分析","言语理解","判断推理"]；daily_packages 缺省 ["0基础","168绝技","168绝技课后作业"]；subject_mode 默认 sequence（先学完一科再下一科），仅当描述明确说每天轮换不同科目时才用 rotate。
+minutes 为补充任务每次的分钟数（如 20、30）。
+
+用户描述：
+`+(desc||'')+`
+`;
+}
+async function parsePlanWithAI(desc){
+  const ai=getAiConfig();
+  const payload={messages:[{role:'system',content:'你只输出严格 JSON。不要输出 Markdown 代码块。'},{role:'user',content:buildParsePrompt(desc)}],temperature:ai.temperature};
+  const {text}=await aiFetch(ai,payload);
+  let data;try{data=JSON.parse(text)}catch(e){data=text}
+  const content=extractTextFromGatewayResponse(data);
+  if(/^\s*</.test(content))throw new Error('AI 返回了网页而非 JSON，请检查网关接口路径。');
+  return parseAiJson(content);
+}
+function applyPlanSpec(spec){
+  spec=spec||{};
+  selectedCourses=[];undoStack=[];
+  if(spec.title)document.getElementById('title').value=String(spec.title);
+  if(spec.start_date)document.getElementById('start_date').value=String(spec.start_date);
+  else if(!val('start_date'))document.getElementById('start_date').value=isoDate(new Date());
+  if(spec.daily_study_time)document.getElementById('daily_study_time').value=String(spec.daily_study_time);
+  if(spec.plan_days)document.getElementById('plan_days').value=String(spec.plan_days);
+  if(spec.student_profile)document.getElementById('student_profile').value=String(spec.student_profile);
+  if(spec.review_freq){const sel=document.getElementById('practice_review_interval');const v=String(spec.review_freq);if([...sel.options].some(o=>o.value===v))sel.value=v;else if(/不/.test(v))sel.value='不自动插入';}
+  let wd;
+  if(typeof spec.weekdays==='string')wd=parseStudyWeekdays(spec.weekdays);
+  else wd=normalizeWeekdays(spec.weekdays);
+  if(!wd||!wd.length)wd=[1,2,3,4,5];
+  setStudyWeekdays(wd);
+  const subjects=(spec.subjects_order||[]).map(normalizeSubjectAlias).filter(Boolean);
+  const packages=(spec.daily_packages||[]).map(normalizePackageAlias).filter(Boolean);
+  if(!subjects.length)subjects=['资料分析'];
+  if(!packages.length)packages=['0基础','168绝技','168绝技课后作业'];
+  const dates=buildStudyDates();
+  if(!dates.length){showStatus('无法确定学习日期，请检查开始日期、学习频次与计划学习日数。');return null}
+  const daysPerSubject=Math.max(1,Math.ceil(dates.length/subjects.length));
+  const pointers={};
+  for(let d=0;d<dates.length;d++){
+    const subj=subjects[Math.floor(d/daysPerSubject)%subjects.length];
+    const group='D'+d;
+    packages.forEach(l1=>{
+      const list=((COURSE_CATALOG[l1]||{})[subj]||[]);
+      if(!list.length)return;
+      const k=l1+'|'+subj;
+      const idx=(pointers[k]||0)%list.length;
+      pointers[k]=idx+1;
+      const l3=list[idx];
+      const task=formatCourseTask(l1,subj,l3);
+      selectedCourses.push({task,goal:inferGoal(task,l1==='168绝技课后作业'?'作业':'课程'),type:l1==='168绝技课后作业'?'作业':'课程',pace:1,startDay:d+1,paceGroup:group});
+    });
+    (spec.supplements||[]).forEach((s,i)=>{
+      const minutes=Number(s.minutes||s.duration||20);
+      const content=String(s.content||'时政积累').trim();
+      const task=content+'（每天'+minutes+'分钟）';
+      const goal=inferSuppGoal(content,minutes,subj);
+      selectedCourses.push({task,goal,type:String(s.type||'背诵'),pace:1,startDay:d+1,paceGroup:'SP'+d+'_'+i});
+    });
+  }
+  document.getElementById('tasks_per_day').value=String(packages.length+(spec.supplements||[]).length);
+  renderSelectedCourses();updateUndoBtn();
+  return{subjects,packages,daysPerSubject,datesLen:dates.length};
+}
+async function parseAndGenerateFromDesc(){
+  const desc=val('ai_desc_input').trim();
+  if(!desc){showStatus('请先在上方粘贴学习计划描述，再点击生成。');return}
+  showStatus('正在调用 AI 解析描述并制定学习计划，请稍候...');
+  try{
+    const spec=await parsePlanWithAI(desc);
+    const info=applyPlanSpec(spec);
+    if(!info)return;
+    generatePreview();
+    showStatus('已按描述生成：'+info.datesLen+' 个学习日；科目顺序 '+info.subjects.join('、')+'；每日课包 '+info.packages.join('/')+'（章节循环铺满每天）。可在下方微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。');
+  }catch(e){
+    showStatus('解析失败：'+e.message+'。可检查公司 AI 网关是否可达，或精简描述后重试；也可在下方手动填写。');
+  }
 }
 function clearForm(){clearSelectedCourses()}
 function loadDemoAndPreview(){loadTemplate('weakData');generatePreview()}
