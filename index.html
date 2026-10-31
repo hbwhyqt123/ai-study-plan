@@ -46,10 +46,12 @@
   <div class="layout">
     <section class="card ai-gen-card">
       <h2>AI 快速制定（粘贴描述即可）</h2>
-      <div class="ai-gen-hint">把一段学习计划描述粘贴到下面，点击「AI 解析并生成」，系统会按制定逻辑自动排课：自动确定学习天数、每周学习日、科目顺序、每日课包（0基础/168绝技/课后作业）与补充任务，并按开始日期自动更新所有时间节点。生成后仍可在下方手动微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。<br>示例：「制定一个45天的学习计划，每周学习五天，周一到周五学习，每天学习3个小时，按照顺序先学习资料分析、言语理解、判断推理，每天任务是一节0基础、一节168绝技、一节168绝技课后练习。每天20分钟时政背诵。」</div>
+      <div class="ai-gen-hint"><b>怎么写最准？</b> 尽量说清下面 5 个要素，AI 解析就最贴合你的需求：<br>① <b>学习周期/总天数</b>：如 45天、8周、考前30天；② <b>每周频率与星期</b>：周一到周五 / 只周末 / 每周三天；③ <b>每天学习时长</b>：如 3小时；④ <b>科目与顺序</b>：资料→言语→判断，或一科一科学完再下一科；⑤ <b>每天课包结构+补充任务</b>：几节0基础/168绝技/课后作业，时政背诵20分钟等。<br><span style="color:#0f766e">可选补充</span>：开始日期、学员基础（在职/零基础）、复习或模考安排。系统会自动排课、并按开始日期更新全部时间节点，生成后仍可在下方手动微调。<br>参考示例：「制定一个45天的学习计划，每周学习五天，周一到周五学习，每天学习3个小时，按照顺序先学习资料分析、言语理解、判断推理，每天任务是一节0基础、一节168绝技、一节168绝技课后练习。每天20分钟时政背诵。」</div>
       <textarea id="ai_desc_input" class="ai-desc" placeholder="在此粘贴学习计划描述，例如上面的示例..."></textarea>
       <div class="ai-gen-actions">
         <button class="orange" id="ai_gen_btn" onclick="parseAndGenerateFromDesc()">AI 解析并生成学习计划</button>
+        <button class="secondary" onclick="fillExample('standard')">示例①标准全职</button>
+        <button class="secondary" onclick="fillExample('weekend')">示例②在职周末</button>
         <button class="secondary" onclick="document.getElementById('ai_desc_input').value=''">清空描述</button>
         <span id="ai_gen_spinner" class="ai-spinner" title="AI 正在解析并制定计划..."></span>
         <span class="hint">生成后可在下面「详细学习内容」区手动增删或改上课日。</span>
@@ -532,6 +534,14 @@ function applyPlanSpec(spec){
   document.getElementById('tasks_per_day').value=String(packages.length+(spec.supplements||[]).length);
   renderSelectedCourses();updateUndoBtn();
   return{subjects,packages,daysPerSubject,datesLen:dates.length};
+}
+function fillExample(type){
+  const ex={
+    standard:'制定一个45天的学习计划，每周学习五天，周一到周五学习，每天学习3个小时，按照顺序先学习资料分析、言语理解、判断推理，每天任务是一节0基础、一节168绝技、一节168绝技课后练习。每天20分钟时政背诵。',
+    weekend:'学员张三是在职备考，从2026-11-01开始，为期8周，只周末（周六、周日）学习，每天学习4个小时，按照顺序先学习判断推理、资料分析、言语理解、数量关系，每天任务是两节168绝技、一节168绝技课后作业，每周日加1小时错题复盘，不背时政。'
+  };
+  const ta=document.getElementById('ai_desc_input');
+  if(ta)ta.value=ex[type]||'';
 }
 async function parseAndGenerateFromDesc(){
   const desc=val('ai_desc_input').trim();
