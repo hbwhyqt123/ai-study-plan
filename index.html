@@ -31,6 +31,10 @@
   .ai-gen-card .ai-desc{width:100%;min-height:130px;box-sizing:border-box;padding:10px 12px;font-size:14px;line-height:1.7;border:1px solid var(--border,#d9d9d9);border-radius:8px;resize:vertical;font-family:inherit;margin-top:8px}
   .ai-gen-hint{font-size:13px;color:var(--muted,#888);line-height:1.8;background:#f7f9fc;border:1px dashed #c9d6ea;padding:10px 12px;border-radius:8px;margin-bottom:4px}
   .ai-gen-actions{margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ai-spinner{display:none;width:18px;height:18px;box-sizing:border-box;border:2.5px solid rgba(15,118,110,.22);border-top-color:var(--green,#0f766e);border-radius:50%;animation:ai-spin .8s linear infinite;vertical-align:middle}
+  .ai-spinner.on{display:inline-block}
+  button:disabled{opacity:.6;cursor:not-allowed;filter:none}
+  @keyframes ai-spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -45,8 +49,9 @@
       <div class="ai-gen-hint">把一段学习计划描述粘贴到下面，点击「AI 解析并生成」，系统会按制定逻辑自动排课：自动确定学习天数、每周学习日、科目顺序、每日课包（0基础/168绝技/课后作业）与补充任务，并按开始日期自动更新所有时间节点。生成后仍可在下方手动微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。<br>示例：「制定一个45天的学习计划，每周学习五天，周一到周五学习，每天学习3个小时，按照顺序先学习资料分析、言语理解、判断推理，每天任务是一节0基础、一节168绝技、一节168绝技课后练习。每天20分钟时政背诵。」</div>
       <textarea id="ai_desc_input" class="ai-desc" placeholder="在此粘贴学习计划描述，例如上面的示例..."></textarea>
       <div class="ai-gen-actions">
-        <button class="orange" onclick="parseAndGenerateFromDesc()">AI 解析并生成学习计划</button>
+        <button class="orange" id="ai_gen_btn" onclick="parseAndGenerateFromDesc()">AI 解析并生成学习计划</button>
         <button class="secondary" onclick="document.getElementById('ai_desc_input').value=''">清空描述</button>
+        <span id="ai_gen_spinner" class="ai-spinner" title="AI 正在解析并制定计划..."></span>
         <span class="hint">生成后可在下面「详细学习内容」区手动增删或改上课日。</span>
       </div>
     </section>
@@ -531,6 +536,10 @@ function applyPlanSpec(spec){
 async function parseAndGenerateFromDesc(){
   const desc=val('ai_desc_input').trim();
   if(!desc){showStatus('请先在上方粘贴学习计划描述，再点击生成。');return}
+  const btn=document.getElementById('ai_gen_btn');
+  const spinner=document.getElementById('ai_gen_spinner');
+  if(btn)btn.disabled=true;
+  if(spinner)spinner.classList.add('on');
   showStatus('正在调用 AI 解析描述并制定学习计划，请稍候...');
   try{
     const spec=await parsePlanWithAI(desc);
@@ -540,6 +549,9 @@ async function parseAndGenerateFromDesc(){
     showStatus('已按描述生成：'+info.datesLen+' 个学习日；科目顺序 '+info.subjects.join('、')+'；每日课包 '+info.packages.join('/')+'（章节循环铺满每天）。可在下方微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。');
   }catch(e){
     showStatus('解析失败：'+e.message+'。可检查公司 AI 网关是否可达，或精简描述后重试；也可在下方手动填写。');
+  }finally{
+    if(btn)btn.disabled=false;
+    if(spinner)spinner.classList.remove('on');
   }
 }
 function clearForm(){clearSelectedCourses()}
