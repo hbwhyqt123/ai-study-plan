@@ -466,7 +466,13 @@ function buildParsePrompt(desc){
   return `你是一个公考学习计划解析器。用户会贴一段【自然语言学习计划描述】，请把它解析成严格 JSON（不要 Markdown、不要解释、不要代码块）。
 
 输出格式：
-{"title":"表格标题，若描述含学员姓名则写『姓名+公考定制学习计划表』，否则空字符串","plan_days":数字(只算学习日，不含休息日),"weekdays":[数字数组],"start_date":"YYYY-MM-DD 或空字符串","daily_study_time":"字符串如 '3小时'","subjects_order":["科目数组"],"daily_packages":["课包数组"],"subject_mode":"sequence","supplements":[{"content":"补充内容名(如 时政积累/时政背诵)","minutes":数字,"per_day":1,"type":"背诵"}],"student_profile":"学员基础/备考目标，未提则空字符串","review_freq":"习题复习频次(每1天..每7天/不自动插入)，未提则空字符串"}
+{"title":"表格标题，若描述含学员姓名则写『姓名+公考定制学习计划表』，否则空字符串","plan_days":数字(只算学习日，不含休息日),"plan_days_specified":布尔,"weekdays":[数字数组],"start_date":"YYYY-MM-DD 或空字符串","daily_study_time":"字符串如 '3小时'","subjects_order":["科目数组"],"daily_packages":["课包数组"],"subject_mode":"sequence","supplements":[{"content":"补充内容名(如 时政积累/时政背诵)","minutes":数字,"per_day":1,"type":"背诵"}],"student_profile":"学员基础/备考目标，未提则空字符串","review_freq":"习题复习频次(每1天..每7天/不自动插入)，未提则空字符串"}
+
+【plan_days 与 plan_days_specified 的判断规则（非常重要）】
+- 只有当用户【明确说出总时长/周期】时，plan_days_specified 才为 true，并把换算后的学习日数填入 plan_days。例如："45天"→45；"两个月"→按每周学习日数换算（如只在周末学两个月≈16）；"8周"→按每周天数换算；"半年"→按每周天数换算。
+- 如果用户【没有说学多少天/多久】，只是描述了星期、每天时长、科目、课包（例如"周一到周五，三小时，资料言语判断，基础绝技作业，时政"），必须输出 "plan_days":0 且 "plan_days_specified":false。
+- 【严禁】把"周一到周五"这类上课日描述当成总天数（不要输出 5）。没有总时长就是 0 天，系统会自动按课表内容铺满排课。
+- 同理，"隔一天学一次""每天学点"这类没给总时长的，也输出 plan_days:0、plan_days_specified:false。
 
 科目必须从这些标准名归一化：资料分析、言语理解、判断推理、数量关系、常识判断、政治理论、申论（资料→资料分析；言语→言语理解；判断→判断推理；数量/数资→数量关系；常识→常识判断；政治→政治理论）。
 课包必须从这些归一化：0基础、168绝技、168绝技课后作业（零基础/0基础→0基础；168绝技/绝技→168绝技；课后练习/课后作业/课后习题→168绝技课后作业）。
@@ -487,6 +493,16 @@ async function parsePlanWithAI(desc){
   if(/^\s*</.test(content))throw new Error('AI 返回了网页而非 JSON，请检查网关接口路径。');
   return parseAiJson(content);
 }
+function computeCatalogDays(subjects,packages){
+  const per=[];
+  (subjects||[]).forEach(subj=>{
+    let mx=0;
+    (packages||[]).forEach(l1=>{const n=((COURSE_CATALOG[l1]||{})[subj]||[]).length;if(n>mx)mx=n;});
+    per.push({subj,days:Math.max(1,mx)});
+  });
+  const total=per.reduce((a,b)=>a+b.days,0);
+  return{per,total};
+}
 function applyPlanSpec(spec){
   spec=spec||{};
   selectedCourses=[];undoStack=[];
@@ -494,7 +510,6 @@ function applyPlanSpec(spec){
   if(spec.start_date)document.getElementById('start_date').value=String(spec.start_date);
   else if(!val('start_date'))document.getElementById('start_date').value=isoDate(new Date());
   if(spec.daily_study_time)document.getElementById('daily_study_time').value=String(spec.daily_study_time);
-  if(spec.plan_days)document.getElementById('plan_days').value=String(spec.plan_days);
   if(spec.student_profile)document.getElementById('student_profile').value=String(spec.student_profile);
   if(spec.review_freq){const sel=document.getElementById('practice_review_interval');const v=String(spec.review_freq);if([...sel.options].some(o=>o.value===v))sel.value=v;else if(/不/.test(v))sel.value='不自动插入';}
   let wd;
@@ -506,12 +521,29 @@ function applyPlanSpec(spec){
   const packages=(spec.daily_packages||[]).map(normalizePackageAlias).filter(Boolean);
   if(!subjects.length)subjects=['资料分析'];
   if(!packages.length)packages=['0基础','168绝技','168绝技课后作业'];
+  const rawDays=Number(spec.plan_days||0);
+  const autoMode=(spec.plan_days_specified===false)||!(rawDays>0);
+  let catDays=null,autoTotal=0;
+  if(autoMode){
+    catDays=computeCatalogDays(subjects,packages);
+    autoTotal=Math.min(Math.max(catDays.total,1),366);
+  }
+  document.getElementById('plan_days').value=String(autoMode?autoTotal:rawDays);
   const dates=buildStudyDates();
   if(!dates.length){showStatus('无法确定学习日期，请检查开始日期、学习频次与计划学习日数。');return null}
-  const daysPerSubject=Math.max(1,Math.ceil(dates.length/subjects.length));
+  const daySubject=new Array(dates.length);
+  if(autoMode){
+    let i=0;
+    catDays.per.forEach(seg=>{for(let k=0;k<seg.days&&i<dates.length;k++,i++)daySubject[i]=seg.subj;});
+    while(i<dates.length){daySubject[i]=subjects[subjects.length-1];i++;}
+  }else{
+    const dPer=Math.max(1,Math.ceil(dates.length/subjects.length));
+    for(let d=0;d<dates.length;d++)daySubject[d]=subjects[Math.floor(d/dPer)%subjects.length];
+  }
+  const daysPerSubject=autoMode?0:Math.max(1,Math.ceil(dates.length/subjects.length));
   const pointers={};
   for(let d=0;d<dates.length;d++){
-    const subj=subjects[Math.floor(d/daysPerSubject)%subjects.length];
+    const subj=daySubject[d];
     const group='D'+d;
     packages.forEach(l1=>{
       const list=((COURSE_CATALOG[l1]||{})[subj]||[]);
@@ -533,7 +565,7 @@ function applyPlanSpec(spec){
   }
   document.getElementById('tasks_per_day').value=String(packages.length+(spec.supplements||[]).length);
   renderSelectedCourses();updateUndoBtn();
-  return{subjects,packages,daysPerSubject,datesLen:dates.length};
+  return{subjects,packages,daysPerSubject,datesLen:dates.length,autoMode,autoDays:autoTotal};
 }
 function fillExample(type){
   const ex={
@@ -556,7 +588,10 @@ async function parseAndGenerateFromDesc(){
     const info=applyPlanSpec(spec);
     if(!info)return;
     generatePreview();
-    showStatus('已按描述生成：'+info.datesLen+' 个学习日；科目顺序 '+info.subjects.join('、')+'；每日课包 '+info.packages.join('/')+'（章节循环铺满每天）。可在下方微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。');
+    const dayNote=info.autoMode
+      ?'描述里没写总天数，已按所选课包内容自动铺满 '+info.datesLen+' 个学习日（每科章节学完为止，补充任务按已排天数同步补齐）。'
+      :'计划学习日数 '+info.datesLen+' 天（来自描述）。';
+    showStatus(dayNote+'科目顺序 '+info.subjects.join('、')+'；每日课包 '+info.packages.join('/')+'。可在下方微调，或点「AI 智能生成预览」让 AI 逐节撰写达成目标。');
   }catch(e){
     showStatus('解析失败：'+e.message+'。可检查公司 AI 网关是否可达，或精简描述后重试；也可在下方手动填写。');
   }finally{
